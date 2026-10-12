@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>TravelPath — Bellman–Ford Travel Planner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <a class="brand" href="#top" aria-label="TravelPath home">
+                <span class="brand-mark" aria-hidden="true">T</span>
+                <span>TravelPath</span>
+            </a>
+            <span class="project-chip">DAA MINI-PROJECT <span class="chip-dot"></span> BELLMAN–FORD</span>
+        </header>
+
+        <main id="top">
+            <section class="hero" aria-labelledby="page-title">
+                <div class="hero-copy">
+                    <p class="eyebrow"><span class="eyebrow-line"></span> A smarter way to connect the dots</p>
+                    <h1 id="page-title">Find your best way<br><span>across Gujarat.</span></h1>
+                    <p class="hero-description">Choose two cities and let Bellman–Ford find the lowest-cost route through the network, one connection at a time.</p>
+                </div>
+                <div class="hero-stamp" aria-label="Academic project using Bellman–Ford">
+                    <span class="stamp-icon" aria-hidden="true">↗</span>
+                    <span>Built around<br><strong>Bellman–Ford</strong></span>
+                </div>
+            </section>
+
+            <section class="planner-card" aria-label="Route planner">
+                <div class="planner-heading">
+                    <div>
+                        <p class="section-kicker">YOUR JOURNEY</p>
+                        <h2>Where would you like to go?</h2>
+                    </div>
+                    <span class="live-indicator"><span></span> NETWORK READY</span>
+                </div>
+                <div class="route-form">
+                    <label class="field-group" for="source-city">
+                        <span class="field-label">FROM</span>
+                        <span class="select-wrap"><span class="location-dot source-dot"></span><select id="source-city" aria-label="Source city"></select></span>
+                    </label>
+                    <div class="journey-connector" aria-hidden="true"><span></span></div>
+                    <label class="field-group" for="destination-city">
+                        <span class="field-label">TO</span>
+                        <span class="select-wrap"><span class="location-dot destination-dot"></span><select id="destination-city" aria-label="Destination city"></select></span>
+                    </label>
+                    <button id="find-route" class="primary-button" type="button"><span>Find best route</span><span class="button-arrow" aria-hidden="true">→</span></button>
+                </div>
+                <div class="planner-footnote"><span class="info-icon" aria-hidden="true">i</span> Route costs are fictional demonstration values, not live fares.</div>
+            </section>
+
+            <section class="results-grid" aria-label="Route result and city network">
+                <article class="result-card card-surface" aria-live="polite">
+                    <div class="card-heading">
+                        <div><p class="section-kicker">YOUR BEST ROUTE</p><h2 id="result-title">Ready when you are</h2></div>
+                        <span class="result-icon" aria-hidden="true">⌁</span>
+                    </div>
+                    <div id="route-result" class="route-result">
+                        <p class="empty-result">Pick your starting point and destination to see the most affordable route.</p>
+                    </div>
+                    <div class="cost-row"><span>Total travel cost</span><strong id="total-cost">—</strong></div>
+                    <div class="result-meta"><span id="route-summary">The route will appear here</span><span id="iterations-summary">0 passes</span></div>
+                </article>
+
+                <article class="graph-card card-surface">
+                    <div class="card-heading graph-heading">
+                        <div><p class="section-kicker">THE NETWORK</p><h2>Gujarat city connections</h2></div>
+                        <div class="graph-tools" aria-label="Graph controls">
+                            <span class="graph-count" id="connection-count">0 connections</span>
+                            <button id="zoom-out" class="zoom-button" type="button" aria-label="Zoom out" title="Zoom out">−</button>
+                            <output id="zoom-level" class="zoom-level" aria-live="polite">100%</output>
+                            <button id="zoom-in" class="zoom-button" type="button" aria-label="Zoom in" title="Zoom in">＋</button>
+                            <button id="zoom-reset" class="zoom-reset" type="button">Reset</button>
+                        </div>
+                    </div>
+                    <div id="algorithm-progress" class="algorithm-progress" aria-live="polite">Choose your cities, then click “Find best route” to watch the algorithm explore.</div>
+                    <div class="graph-canvas">
+                        <svg id="city-graph" viewBox="0 0 760 430" role="img" aria-labelledby="graph-title graph-description">
+                            <title id="graph-title">Gujarat city connection graph</title>
+                            <desc id="graph-description">Cities are shown as nodes. Lines represent bidirectional connections and their illustrative costs. Use the zoom controls or drag the graph to explore it.</desc>
+                            <g id="graph-viewport">
+                                <g id="graph-edges"></g>
+                                <g id="graph-nodes"></g>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="distance-table-section">
+                        <div class="subsection-heading"><h3>Live distance table</h3><span>∞ means no route found yet</span></div>
+                        <div class="distance-table-scroll">
+                            <table class="distance-table">
+                                <thead><tr><th scope="col">City</th><th scope="col">Current distance</th><th scope="col">Previous city</th></tr></thead>
+                                <tbody id="distance-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="playback-panel" aria-label="Algorithm playback controls">
+                        <div class="playback-status"><strong>Execution playback</strong><span id="playback-progress" aria-live="polite">0 / 0 events</span></div>
+                        <div class="playback-buttons">
+                            <button id="play-pause" type="button" disabled>Play</button>
+                            <button id="pause" type="button" disabled>Pause</button>
+                            <button id="previous-step" type="button" disabled>Previous</button>
+                            <button id="next-step" type="button" disabled>Next step</button>
+                            <button id="restart" type="button" disabled>Restart</button>
+                            <button id="run-to-end" type="button" disabled>Run to end</button>
+                        </div>
+                        <div class="speed-control">
+                            <label for="speed-slider">Playback speed</label>
+                            <input id="speed-slider" type="range" min="0" max="5" step="1" value="2" aria-label="Playback speed preset">
+                            <output id="speed-output" for="speed-slider" aria-live="polite">1×</output>
+                            <div class="speed-stop-labels" aria-hidden="true"><span>0.25×</span><span>0.5×</span><span>1×</span><span>5×</span><span>10×</span><span>20×</span></div>
+                        </div>
+                    </div>
+                    <div class="legend" aria-label="Graph legend">
+                        <span><i class="legend-swatch legend-route"></i> Connection</span>
+                        <span><i class="legend-swatch legend-path"></i> Best route</span>
+                        <span><i class="legend-swatch legend-active"></i> Examined edge</span>
+                        <span><i class="legend-swatch legend-improved"></i> Distance improved</span>
+                        <span><i class="legend-swatch legend-predecessor"></i> Predecessor link</span>
+                        <span><i class="legend-swatch legend-origin"></i> Starting city</span>
+                        <span><i class="legend-swatch legend-destination"></i> Destination</span>
+                    </div>
+                    <details class="network-editor">
+                        <summary><span>Customize the network</span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
+                        <div class="network-editor-content">
+                            <p>Add or update a two-way connection. Travel costs must be non-negative.</p>
+                            <form id="add-route-form" class="add-route-form">
+                                <label for="route-from">From<select id="route-from" required></select></label>
+                                <span class="form-link" aria-hidden="true">↔</span>
+                                <label for="route-to">To<select id="route-to" required></select></label>
+                                <label for="route-cost">Cost (₹)<input id="route-cost" type="number" min="0" step="1" placeholder="e.g. 240" required></label>
+                                <button class="secondary-button" type="submit">Add route <span aria-hidden="true">＋</span></button>
+                            </form>
+                            <p id="add-route-message" class="form-message" role="status" aria-live="polite"></p>
+                        </div>
+                    </details>
+                </article>
+            </section>
+
+            <section class="algorithm-snapshot card-surface" aria-labelledby="snapshot-title">
+                <header class="snapshot-header">
+                    <div class="snapshot-heading">
+                        <p class="section-kicker">ALGORITHM SNAPSHOT</p>
+                        <h2 id="snapshot-title">How Bellman–Ford finds your best route</h2>
+                        <p>It grows reliable route costs from your starting city, checks every connection, and remembers which city led to each improvement.</p>
+                    </div>
+                    <span class="snapshot-badge"><span class="snapshot-badge-dot"></span> Works with negative edges</span>
+                </header>
+
+                <div class="snapshot-learning-grid">
+                    <ol class="snapshot-steps">
+                        <li><span class="snapshot-step-number">01</span><div><h3>Start with what is known</h3><p>Set the source distance to <strong>0</strong>. Every other city starts at <strong>∞</strong>, meaning no route has been found yet.</p></div></li>
+                        <li><span class="snapshot-step-number">02</span><div><h3>Try each connection</h3><p>For a directed edge <strong>u → v</strong>, add its cost to the best known distance to <strong>u</strong> to get a candidate for <strong>v</strong>.</p></div></li>
+                        <li><span class="snapshot-step-number">03</span><div><h3>Keep a cheaper result</h3><p>If the candidate is lower, update <strong>v</strong>'s distance and set its previous city to <strong>u</strong>. Otherwise, keep the current value.</p></div></li>
+                        <li><span class="snapshot-step-number">04</span><div><h3>Check and rebuild</h3><p>After up to <strong>V − 1</strong> passes, check for a reachable negative cycle. If none exists, follow previous-city links to rebuild the route.</p></div></li>
+                    </ol>
+                    <aside class="relaxation-card" aria-label="Bellman–Ford edge relaxation rule">
+                        <span class="relaxation-kicker">THE RELAXATION RULE</span>
+                        <h3>Does this connection improve the route?</h3>
+                        <div class="equation"><span>distance[u]</span><b>+</b><span>weight(u, v)</span><b>&lt;</b><span>distance[v]</span></div>
+                        <p>If true, save the candidate as the new distance to <strong>v</strong> and remember <strong>u</strong> as its predecessor.</p>
+                        <div class="relaxation-note"><span aria-hidden="true">↳</span> Each improvement is visible in the live table and graph above.</div>
+                    </aside>
+                </div>
+
+                <div class="snapshot-bottom-row">
+                    <div class="why-bellman-card">
+                        <span class="why-icon" aria-hidden="true">↗</span>
+                        <div><h3>Why Bellman–Ford?</h3><p>It revisits edges across multiple passes, so it can handle negative edge weights. A reachable negative cycle means costs can keep decreasing, so a finite shortest route does not exist.</p></div>
+                    </div>
+                    <div class="complexity-cards" aria-label="Algorithm complexity">
+                        <div><span>TIME</span><strong>O(VE)</strong><small>up to V − 1 passes</small></div>
+                        <div><span>CORE SPACE</span><strong>O(V)</strong><small>distances + predecessors</small></div>
+                        <div><span>V · E</span><strong>Vertices · Edges</strong><small>graph size notation</small></div>
+                    </div>
+                </div>
+
+                <div class="execution-panel">
+                    <div class="execution-heading">
+                        <div><p class="section-kicker">LIVE EXECUTION</p><h3>Follow the algorithm event by event</h3><span id="log-count">Waiting for a route</span></div>
+                    </div>
+                    <div class="current-operation" aria-live="polite"><h4 id="operation-title">Waiting for a route</h4><p id="operation-explanation">Choose your cities and click Find best route to record Bellman–Ford's operations.</p></div>
+                    <ol id="execution-log" class="execution-log"><li class="log-placeholder">Find a route to create the algorithm's event timeline.</li></ol>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer"><span>TravelPath <span class="footer-separator">/</span> DAA Mini-Project</span><span>Built to make shortest paths easier to understand.</span></footer>
+    </div>
+    <script src="actual_algorithm_script.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
